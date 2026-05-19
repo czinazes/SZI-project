@@ -226,6 +226,7 @@ data/raw/*
 data/processed/train/
 data/processed/val/
 data/processed/test/
+data/processed/*.csv
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
@@ -242,3 +243,7 @@ outputs/*.json
 
 # Screenshots from camera
 screenshot_*.png
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
