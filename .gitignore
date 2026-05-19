@@ -216,3 +216,29 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ============================================
+# Project-specific ignores
+# ============================================
+
+# Dataset files (large, download from Kaggle)
+data/raw/*
+data/processed/train/
+data/processed/val/
+data/processed/test/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Trained models (large binary files)
+models/*.keras
+models/*.h5
+models/*.pb
+!models/.gitkeep
+
+# Training outputs
+outputs/*.png
+outputs/*.json
+!outputs/.gitkeep
+
+# Screenshots from camera
+screenshot_*.png
