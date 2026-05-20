@@ -7,8 +7,35 @@ for face classification tasks.
 
 from tensorflow import keras
 from tensorflow.keras import layers, models
+from tensorflow.keras.applications import MobileNetV2
 
 from src.config import cfg
+
+
+def build_mobilenet_transfer() -> keras.Model:
+    """
+    Build a Transfer Learning model using MobileNetV2.
+    """
+    input_shape = (cfg.image.size, cfg.image.size, cfg.image.channels)
+    num_classes = cfg.model.num_classes
+
+    base_model = MobileNetV2(
+        input_shape=input_shape,
+        include_top=False,
+        weights="imagenet"
+    )
+    
+    # Freeze the base model
+    base_model.trainable = False
+
+    model = models.Sequential([
+        base_model,
+        layers.GlobalAveragePooling2D(),
+        layers.Dropout(0.5),
+        layers.Dense(num_classes, activation="softmax")
+    ])
+
+    return model
 
 
 def build_custom_cnn() -> keras.Model:
@@ -83,6 +110,8 @@ def build_model() -> keras.Model:
     """
     if cfg.model.architecture == "custom_cnn":
         model = build_custom_cnn()
+    elif cfg.model.architecture == "mobilenet_transfer":
+        model = build_mobilenet_transfer()
     else:
         raise ValueError(f"Unknown architecture: {cfg.model.architecture}")
 

@@ -91,6 +91,7 @@ class CameraConfig:
     min_face_size: int = 30
     detection_scale: float = 1.3
     min_neighbors: int = 5
+    mirror: bool = False
 
 
 @dataclass
@@ -194,6 +195,7 @@ def load_config() -> Config:
         min_face_size=cam_raw.get("min_face_size", 30),
         detection_scale=cam_raw.get("detection_scale", 1.3),
         min_neighbors=cam_raw.get("min_neighbors", 5),
+        mirror=cam_raw.get("mirror", False),
     )
 
     ovl_raw = raw.get("overlay", {})

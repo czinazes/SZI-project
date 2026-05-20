@@ -65,6 +65,8 @@ def extract_face_roi_padded(frame: np.ndarray, x: int, y: int, w: int, h: int) -
         face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
         # Histogram equalization improves contrast in poor lighting
         face_roi = cv2.equalizeHist(face_roi)
+    elif cfg.image.color_mode == "rgb":
+        face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
 
     face_roi = cv2.resize(face_roi, (cfg.image.size, cfg.image.size))
     face_roi = face_roi.astype("float32") / 255.0
@@ -155,11 +157,19 @@ def run_camera():
     # We use a simple single-buffer approach (one face assumed for now)
     smooth_buffer = collections.deque(maxlen=SMOOTH_FRAMES)
 
+    # Session Statistics
+    session_stats = {name: 0 for name in cfg.model.class_names}
+    total_analyzed_faces = 0
+    start_session_time = time.time()
+
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Failed to read frame. Exiting.")
             break
+
+        if cfg.camera.mirror:
+            frame = cv2.flip(frame, 1)
 
         # FPS
         curr_time = time.time()
@@ -196,6 +206,10 @@ def run_camera():
 
             # Draw bounding box + top label
             draw_face_box(frame, x, y, w, h, label, confidence, color)
+            
+            # Update session stats
+            session_stats[label] += 1
+            total_analyzed_faces += 1
 
             # Draw probability bars for all emotions
             if SHOW_BARS:
@@ -222,4 +236,22 @@ def run_camera():
 
     cap.release()
     cv2.destroyAllWindows()
+    
+    # Print Session Statistics
+    elapsed_time = time.time() - start_session_time
+    print("\n" + "="*40)
+    print("  📊 Session Statistics")
+    print("="*40)
+    print(f"Total Time:      {elapsed_time:.1f} seconds")
+    print(f"Faces Analyzed:  {total_analyzed_faces}")
+    
+    if total_analyzed_faces > 0:
+        print("\nEmotion Distribution:")
+        sorted_stats = sorted(session_stats.items(), key=lambda x: x[1], reverse=True)
+        for emotion, count in sorted_stats:
+            if count > 0:
+                pct = (count / total_analyzed_faces) * 100
+                print(f"  - {emotion:10s}: {pct:5.1f}% ({count} frames)")
+    print("="*40 + "\n")
+    
     print("Camera closed.")

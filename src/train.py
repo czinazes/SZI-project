@@ -14,6 +14,8 @@ from tensorflow.keras.callbacks import (
     ReduceLROnPlateau,
     TensorBoard,
 )
+import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
 
 from src.config import cfg
 from src.data_preprocessing import create_train_generator
@@ -94,14 +96,33 @@ def train():
     print(f"  Validation samples: {val_gen.samples}")
     print(f"  Class indices:      {train_gen.class_indices}")
 
-    # Step 2: Build model
-    print("\n[2/4] Building model...")
-    model = build_model()
+    # Step 2: Build or load model
+    print("\n[2/4] Building or loading model...")
+    if os.path.exists(cfg.paths.model_save):
+        print(f"  Found existing model checkpoint: {cfg.paths.model_save}")
+        print("  Loading weights to resume training...")
+        try:
+            model = keras.models.load_model(cfg.paths.model_save)
+        except Exception as e:
+            print(f"  Error loading model: {e}. Building a new model instead.")
+            model = build_model()
+    else:
+        print("  No checkpoint found. Building new model...")
+        model = build_model()
     model.summary()
 
     # Step 3: Train
     print("\n[3/4] Training model...")
     callbacks = get_callbacks()
+
+    print("  Calculating class weights for imbalanced data...")
+    class_weights = compute_class_weight(
+        class_weight='balanced',
+        classes=np.unique(train_gen.classes),
+        y=train_gen.classes
+    )
+    class_weight_dict = dict(enumerate(class_weights))
+    print(f"  Class weights: {class_weight_dict}")
 
     history = model.fit(
         train_gen,
@@ -110,6 +131,7 @@ def train():
         validation_steps=val_gen.samples // cfg.training.batch_size,
         epochs=cfg.training.epochs,
         callbacks=callbacks,
+        class_weight=class_weight_dict,
         verbose=1,
     )
 

@@ -12,18 +12,18 @@ data:
   train_dir: "data/processed/train"
   val_dir: "data/processed/val"
   test_dir: "data/processed/test"
-  val_split: 0.2          # fraction of training data used for validation
+  val_split: 0.2 # fraction of training data used for validation
 
 # --- Image ---
 image:
-  size: 48                # input image size (48x48 for FER2013, 128x128 for mask)
-  channels: 1             # 1 = grayscale, 3 = RGB
-  color_mode: "grayscale" # "grayscale" or "rgb"
+  size: 48 # input image size (48x48 for FER2013, 128x128 for mask)
+  channels: 3 # 1 = grayscale, 3 = RGB
+  color_mode: "rgb" # "grayscale" or "rgb"
 
 # --- Model ---
 model:
-  architecture: "custom_cnn"   # "custom_cnn" or "mobilenet_transfer"
-  num_classes: 7               # 7 for FER2013 emotions, 2 for mask detection
+  architecture: "mobilenet_transfer" # "custom_cnn" or "mobilenet_transfer"
+  num_classes: 7 # 7 for FER2013 emotions, 2 for mask detection
   class_names:
     - "Angry"
     - "Disgust"
@@ -60,18 +60,19 @@ paths:
 
 # --- Camera ---
 camera:
-  index: 0               # webcam device index (0 = default)
+  index: 0 # webcam device index (0 = default)
   frame_width: 640
   frame_height: 480
-  cascade_path: null      # null = use OpenCV default haarcascade_frontalface
-  min_face_size: 30       # minimum face size in pixels
-  detection_scale: 1.3    # scaleFactor for detectMultiScale
-  min_neighbors: 5        # minNeighbors for detectMultiScale
+  cascade_path: null # null = use OpenCV default haarcascade_frontalface
+  min_face_size: 30 # minimum face size in pixels
+  detection_scale: 1.3 # scaleFactor for detectMultiScale
+  min_neighbors: 5 # minNeighbors for detectMultiScale
+  mirror: true # true = flip horizontally (mirrored), false = normal camera feed
 
 # --- UI Overlay ---
 overlay:
-  box_color_positive: [0, 255, 0]    # green (BGR)
-  box_color_negative: [0, 0, 255]    # red (BGR)
+  box_color_positive: [0, 255, 0] # green (BGR)
+  box_color_negative: [0, 0, 255] # red (BGR)
   box_thickness: 2
   font_scale: 0.8
   show_confidence: true
