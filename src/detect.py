@@ -1,55 +1,45 @@
 """
-detect.py — MediaPipe Face Detection utilities.
+detect.py — Haar Cascade face detection utilities.
 """
 
 import cv2
 import numpy as np
-import mediapipe as mp
 from src.config import cfg
 
 
-def get_face_detector():
-    """Load MediaPipe Face Detection."""
-    mp_face_detection = mp.solutions.face_detection
-    return mp_face_detection.FaceDetection(
-        model_selection=0, # 0 for short-range faces (within 2m)
-        min_detection_confidence=0.5
-    )
+def get_face_detector() -> cv2.CascadeClassifier:
+    """Load Haar Cascade face detector."""
+    if cfg.camera.cascade_path:
+        cascade_path = cfg.camera.cascade_path
+    else:
+        cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+
+    detector = cv2.CascadeClassifier(cascade_path)
+    if detector.empty():
+        raise RuntimeError(f"Failed to load cascade from: {cascade_path}")
+
+    return detector
 
 
-def detect_faces(frame: np.ndarray, detector) -> list:
+def detect_faces(frame: np.ndarray, detector: cv2.CascadeClassifier) -> list:
     """
     Detect faces in a frame.
 
     Args:
         frame: BGR image from webcam.
-        detector: MediaPipe FaceDetection instance.
+        detector: Haar Cascade classifier.
 
     Returns:
         List of (x, y, w, h) tuples for each detected face.
     """
-    # MediaPipe expects RGB images
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = detector.process(rgb_frame)
-    
-    faces = []
-    if results.detections:
-        fh, fw = frame.shape[:2]
-        for detection in results.detections:
-            bboxC = detection.location_data.relative_bounding_box
-            x = int(bboxC.xmin * fw)
-            y = int(bboxC.ymin * fh)
-            w = int(bboxC.width * fw)
-            h = int(bboxC.height * fh)
-            
-            # Ensure coordinates are within image boundaries
-            x = max(0, x)
-            y = max(0, y)
-            w = min(w, fw - x)
-            h = min(h, fh - y)
-            
-            if w > 0 and h > 0:
-                faces.append((x, y, w, h))
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    faces = detector.detectMultiScale(
+        gray,
+        scaleFactor=cfg.camera.detection_scale,
+        minNeighbors=cfg.camera.min_neighbors,
+        minSize=(cfg.camera.min_face_size, cfg.camera.min_face_size),
+    )
 
     return faces
 
